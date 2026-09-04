@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#17324d" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Tournée Mairie" />
+  <title>Tournée Matériel — Roquefort-les-Pins</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icon.svg" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <div class="eyebrow">Mairie de Roquefort-les-Pins</div>
+      <h1>Tournée matériel</h1>
+    </div>
+    <button id="resetDayBtn" class="ghost danger" type="button">Nouvelle journée</button>
+  </header>
+
+  <main class="container">
+    <section class="panel intro">
+      <div>
+        <h2>Préparer la tournée du lundi</h2>
+        <p>Ajoute les livraisons et récupérations. L'application calcule le chargement minimal au local puis cherche un ordre de tournée qui limite les kilomètres tout en évitant de manquer de matériel ou de dépasser la capacité du camion.</p>
+      </div>
+      <div class="datebox">
+        <label for="tourDate">Date</label>
+        <input id="tourDate" type="date" />
+      </div>
+    </section>
+
+    <section class="grid two">
+      <article class="panel">
+        <div class="section-title">
+          <div>
+            <div class="eyebrow">Étape 1</div>
+            <h2>Camion et dépôt</h2>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="depotAddress">Adresse de départ / local technique</label>
+          <input id="depotAddress" type="text" placeholder="Ex. 06330 Roquefort-les-Pins" />
+          <small>Indique l'adresse réelle du local technique pour améliorer le trajet.</small>
+        </div>
+
+        <div class="subheading">Capacité maximale du camion</div>
+        <div class="grid three compact">
+          <label>Tables<input id="capTables" type="number" min="0" step="1" value="30" /></label>
+          <label>Chaises<input id="capChairs" type="number" min="0" step="1" value="180" /></label>
+          <label>Barnums<input id="capTents" type="number" min="0" step="1" value="4" /></label>
+        </div>
+        <p class="hint">Pour cette V1, les capacités sont comptées séparément par type de matériel. On pourra ensuite gérer le volume réel occupé dans le camion.</p>
+      </article>
+
+      <article class="panel">
+        <div class="section-title">
+          <div>
+            <div class="eyebrow">Étape 2</div>
+            <h2>Ajouter une intervention</h2>
+          </div>
+        </div>
+
+        <form id="stopForm">
+          <div class="segmented" role="group" aria-label="Type d'intervention">
+            <label><input type="radio" name="type" value="pickup" checked /><span>Récupération</span></label>
+            <label><input type="radio" name="type" value="delivery" /><span>Livraison</span></label>
+          </div>
+
+          <div class="grid two compact">
+            <label>Nom / bénéficiaire<input id="name" type="text" placeholder="M. Dupont" /></label>
+            <label>Téléphone<input id="phone" type="tel" placeholder="06 00 00 00 00" /></label>
+          </div>
+          <label>Adresse<input id="address" type="text" required placeholder="12 chemin…, 06330 Roquefort-les-Pins" /></label>
+          <div class="grid three compact">
+            <label>Tables<input id="tables" type="number" min="0" step="1" value="0" /></label>
+            <label>Chaises<input id="chairs" type="number" min="0" step="1" value="0" /></label>
+            <label>Barnums<input id="tents" type="number" min="0" step="1" value="0" /></label>
+          </div>
+          <label>Remarque<input id="notes" type="text" placeholder="Appeler avant, portail, accès étroit…" /></label>
+          <button class="primary full" type="submit">Ajouter à la journée</button>
+        </form>
+      </article>
+    </section>
+
+    <section class="panel">
+      <div class="section-title">
+        <div>
+          <div class="eyebrow">Étape 3</div>
+          <h2>Interventions prévues</h2>
+        </div>
+        <div class="actions">
+          <button id="demoBtn" class="ghost" type="button">Charger un exemple</button>
+          <button id="optimizeBtn" class="primary" type="button">Optimiser la tournée</button>
+        </div>
+      </div>
+      <div id="emptyStops" class="empty">Aucune intervention pour l'instant.</div>
+      <div id="stopsList" class="cards"></div>
+    </section>
+
+    <section id="resultsSection" class="panel hidden">
+      <div class="section-title">
+        <div>
+          <div class="eyebrow">Résultat</div>
+          <h2>Plan de tournée</h2>
+        </div>
+        <button id="openFullRouteBtn" class="ghost" type="button">Ouvrir le trajet</button>
+      </div>
+
+      <div id="alerts"></div>
+
+      <div class="summary-grid">
+        <div class="summary-card emphasis">
+          <span>À charger au local</span>
+          <strong id="initialLoad">—</strong>
+        </div>
+        <div class="summary-card">
+          <span>Distance estimée</span>
+          <strong id="distanceSummary">—</strong>
+        </div>
+        <div class="summary-card">
+          <span>Arrêts</span>
+          <strong id="stopsSummary">—</strong>
+        </div>
+      </div>
+
+      <div class="inventory-strip">
+        <div><span>Tables livrées</span><strong id="totalDeliveryTables">0</strong></div>
+        <div><span>Tables récupérées</span><strong id="totalPickupTables">0</strong></div>
+        <div><span>Chaises livrées</span><strong id="totalDeliveryChairs">0</strong></div>
+        <div><span>Chaises récupérées</span><strong id="totalPickupChairs">0</strong></div>
+        <div><span>Barnums livrés</span><strong id="totalDeliveryTents">0</strong></div>
+        <div><span>Barnums récupérés</span><strong id="totalPickupTents">0</strong></div>
+      </div>
+
+      <div class="route-heading">
+        <h3>Ordre proposé</h3>
+        <p>Le stock affiché correspond au contenu du camion après chaque arrêt.</p>
+      </div>
+      <div id="routeList" class="route-list"></div>
+    </section>
+  </main>
+
+  <dialog id="editDialog">
+    <form method="dialog" id="editForm" class="dialog-card">
+      <div class="section-title"><h2>Modifier</h2><button class="icon-btn" value="cancel" aria-label="Fermer">✕</button></div>
+      <input id="editId" type="hidden" />
+      <div class="segmented">
+        <label><input type="radio" name="editType" value="pickup" /><span>Récupération</span></label>
+        <label><input type="radio" name="editType" value="delivery" /><span>Livraison</span></label>
+      </div>
+      <label>Nom<input id="editName" type="text" /></label>
+      <label>Téléphone<input id="editPhone" type="tel" /></label>
+      <label>Adresse<input id="editAddress" type="text" required /></label>
+      <div class="grid three compact">
+        <label>Tables<input id="editTables" type="number" min="0" /></label>
+        <label>Chaises<input id="editChairs" type="number" min="0" /></label>
+        <label>Barnums<input id="editTents" type="number" min="0" /></label>
+      </div>
+      <label>Remarque<input id="editNotes" type="text" /></label>
+      <div class="actions end"><button class="ghost" value="cancel">Annuler</button><button id="saveEditBtn" class="primary" value="default">Enregistrer</button></div>
+    </form>
+  </dialog>
+
+  <footer>V1 locale — données enregistrées uniquement dans ce navigateur. Géocodage © OpenStreetMap contributors.</footer>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,9 +1,0 @@
-{
-  "name":"Tournée matériel — Roquefort-les-Pins",
-  "short_name":"Tournée Mairie",
-  "start_url":"./",
-  "display":"standalone",
-  "background_color":"#f4f7fa",
-  "theme_color":"#14395a",
-  "icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml"}]
-}
